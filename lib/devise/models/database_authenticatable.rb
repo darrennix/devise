@@ -33,21 +33,21 @@ module Devise
       end
 
       def self.required_fields(klass)
-        [:encrypted_password] + klass.authentication_keys
+        [:password_digest] + klass.authentication_keys
       end
 
       # Generates password encryption based on the given value.
       def password=(new_password)
         @password = new_password
-        self.encrypted_password = password_digest(@password) if @password.present?
+        self.password_digest = password_digest_orig(@password) if @password.present?
       end
 
       # Verifies whether an password (ie from sign in) is the user password.
       def valid_password?(password)
-        return false if encrypted_password.blank?
-        bcrypt   = ::BCrypt::Password.new(encrypted_password)
+        return false if password_digest.blank?
+        bcrypt   = ::BCrypt::Password.new(password_digest)
         password = ::BCrypt::Engine.hash_secret("#{password}#{self.class.pepper}", bcrypt.salt)
-        Devise.secure_compare(password, encrypted_password)
+        Devise.secure_compare(password, password_digest)
       end
 
       # Set password and password confirmation to nil
@@ -130,7 +130,7 @@ module Devise
 
       # A reliable way to expose the salt regardless of the implementation.
       def authenticatable_salt
-        encrypted_password[0,29] if encrypted_password
+        password_digest[0,29] if password_digest
       end
 
     protected
@@ -140,7 +140,7 @@ module Devise
       #
       # See https://github.com/plataformatec/devise-encryptable for examples
       # of other encryption engines.
-      def password_digest(password)
+      def password_digest_orig(password)
         Devise.bcrypt(self.class, password)
       end
 
