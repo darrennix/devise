@@ -45,14 +45,10 @@ module Devise
       # Resets reset password token and send reset password instructions by email.
       # Returns the token sent in the e-mail.
       def send_reset_password_instructions
-        raw, enc = Devise.token_generator.generate(self.class, :reset_password_token)
+        token = set_reset_password_token
+        send_reset_password_instructions_notification(token)
 
-        self.reset_password_token   = enc
-        self.reset_password_sent_at = Time.now.utc
-        self.save(:validate => false)
-
-        send_devise_notification(:reset_password_instructions, raw, {})
-        raw
+        token
       end
 
       # Checks if the reset password token sent is within the limit time.
@@ -90,7 +86,27 @@ module Devise
         def after_password_reset
         end
 
+        def set_reset_password_token
+          raw, enc = Devise.token_generator.generate(self.class, :reset_password_token)
+
+          self.reset_password_token   = enc
+          self.reset_password_sent_at = Time.now.utc
+          self.save(validate: false)
+          raw
+        end
+
+        def send_reset_password_instructions_notification(token)
+          send_devise_notification(:reset_password_instructions, token, {})
+        end
+
       module ClassMethods
+        # Attempt to find a user by password reset token. If a user is found, return it
+        # If a user is not found, return nil
+        def with_reset_password_token(token)
+          reset_password_token = Devise.token_generator.digest(self, :reset_password_token, token)
+          to_adapter.find_first(reset_password_token: reset_password_token)
+        end
+
         # Attempt to find a user by its email. If a record is found, send new
         # password instructions to it. If user is not found, returns a new user
         # with an email not found error.

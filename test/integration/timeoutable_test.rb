@@ -8,12 +8,11 @@ class SessionTimeoutTest < ActionDispatch::IntegrationTest
 
   test 'set last request at in user session after each request' do
     sign_in_as_user
-    old_last_request = last_request_at
     assert_not_nil last_request_at
 
+    @controller.user_session.delete('last_request_at')
     get users_path
     assert_not_nil last_request_at
-    assert_not_equal old_last_request, last_request_at
   end
 
   test 'set last request at in user session after each request is skipped if tracking is disabled' do
@@ -104,7 +103,7 @@ class SessionTimeoutTest < ActionDispatch::IntegrationTest
     user = sign_in_as_user
     get expire_user_path(user)
 
-    post "/users/sign_in", :email => user.email, :password => "123456"
+    post "/users/sign_in", email: user.email, password: "123456"
 
     assert_response :redirect
     follow_redirect!
@@ -129,7 +128,7 @@ class SessionTimeoutTest < ActionDispatch::IntegrationTest
   end
 
   test 'user configured timeout limit' do
-    swap Devise, :timeout_in => 8.minutes do
+    swap Devise, timeout_in: 8.minutes do
       user = sign_in_as_user
 
       get users_path
@@ -145,8 +144,8 @@ class SessionTimeoutTest < ActionDispatch::IntegrationTest
   end
 
   test 'error message with i18n' do
-    store_translations :en, :devise => {
-      :failure => { :user => { :timeout => 'Session expired!' } }
+    store_translations :en, devise: {
+      failure: { user: { timeout: 'Session expired!' } }
     } do
       user = sign_in_as_user
 
@@ -158,8 +157,8 @@ class SessionTimeoutTest < ActionDispatch::IntegrationTest
   end
 
   test 'error message with i18n with double redirect' do
-    store_translations :en, :devise => {
-      :failure => { :user => { :timeout => 'Session expired!' } }
+    store_translations :en, devise: {
+      failure: { user: { timeout: 'Session expired!' } }
     } do
       user = sign_in_as_user
 
@@ -172,7 +171,7 @@ class SessionTimeoutTest < ActionDispatch::IntegrationTest
   end
 
   test 'time out not triggered if remembered' do
-    user = sign_in_as_user :remember_me => true
+    user = sign_in_as_user remember_me: true
     get expire_user_path(user)
     assert_not_nil last_request_at
 

@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.licenses    = ["MIT"]
   s.summary     = "Flexible authentication solution for Rails with Warden"
   s.email       = "contact@plataformatec.com.br"
-  s.homepage    = "http://github.com/plataformatec/devise"
+  s.homepage    = "https://github.com/plataformatec/devise"
   s.description = "Flexible authentication solution for Rails with Warden"
   s.authors     = ['José Valim', 'Carlos Antônio']
 
@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
 
   s.add_dependency("warden", "~> 1.2.3")
   s.add_dependency("orm_adapter", "~> 0.1")
-  s.add_dependency("bcrypt-ruby", "~> 3.0")
+  s.add_dependency("bcrypt", "~> 3.0")
   s.add_dependency("thread_safe", "~> 0.1")
   s.add_dependency("railties", ">= 3.2.6", "< 5")
 end

@@ -134,6 +134,10 @@ module Devise
   mattr_accessor :extend_remember_period
   @@extend_remember_period = false
 
+  # If true, all the remember me tokens are going to be invalidated when the user signs out.
+  mattr_accessor :expire_all_remember_me_on_sign_out
+  @@expire_all_remember_me_on_sign_out = true
+
   # Time interval you can access your account before confirming your account.
   # nil - allows unconfirmed access for unlimited time
   mattr_accessor :allow_unconfirmed_access_for
@@ -268,7 +272,7 @@ module Devise
   # Private methods to interface with Warden.
   mattr_accessor :warden_config
   @@warden_config = nil
-  @@warden_config_block = nil
+  @@warden_config_blocks = []
 
   # When true, enter in paranoid mode to avoid user enumeration.
   mattr_accessor :paranoid
@@ -350,8 +354,8 @@ module Devise
   # == Examples:
   #
   #   Devise.add_module(:party_module)
-  #   Devise.add_module(:party_module, :strategy => true, :controller => :sessions)
-  #   Devise.add_module(:party_module, :model => 'party_module/model')
+  #   Devise.add_module(:party_module, strategy: true, controller: :sessions)
+  #   Devise.add_module(:party_module, model: 'party_module/model')
   #
   def self.add_module(module_name, options = {})
     ALL << module_name
@@ -400,7 +404,7 @@ module Devise
   # Sets warden configuration using a block that will be invoked on warden
   # initialization.
   #
-  #  Devise.initialize do |config|
+  #  Devise.setup do |config|
   #    config.allow_unconfirmed_access_for = 2.days
   #
   #    config.warden do |manager|
@@ -409,7 +413,7 @@ module Devise
   #    end
   #  end
   def self.warden(&block)
-    @@warden_config_block = block
+    @@warden_config_blocks << block
   end
 
   # Specify an omniauth provider.
@@ -449,7 +453,7 @@ module Devise
       warden_config.intercept_401 = false
 
       Devise.mappings.each_value do |mapping|
-        warden_config.scope_defaults mapping.name, :strategies => mapping.strategies
+        warden_config.scope_defaults mapping.name, strategies: mapping.strategies
 
         warden_config.serialize_into_session(mapping.name) do |record|
           mapping.to.serialize_into_session(record)
@@ -463,7 +467,7 @@ module Devise
         end
       end
 
-      @@warden_config_block.try :call, Devise.warden_config
+      @@warden_config_blocks.map { |block| block.call Devise.warden_config }
       true
     end
   end

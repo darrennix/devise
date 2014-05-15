@@ -17,7 +17,7 @@ Devise is a flexible authentication solution for Rails based on Warden. It:
 It's composed of 10 modules:
 
 * [Database Authenticatable](http://rubydoc.info/github/plataformatec/devise/master/Devise/Models/DatabaseAuthenticatable): encrypts and stores a password in the database to validate the authenticity of a user while signing in. The authentication can be done both through POST requests or HTTP Basic Authentication.
-* [Omniauthable](http://rubydoc.info/github/plataformatec/devise/master/Devise/Models/Omniauthable): adds Omniauth (https://github.com/intridea/omniauth) support;
+* [Omniauthable](http://rubydoc.info/github/plataformatec/devise/master/Devise/Models/Omniauthable): adds Omniauth (https://github.com/intridea/omniauth) support.
 * [Confirmable](http://rubydoc.info/github/plataformatec/devise/master/Devise/Models/Confirmable): sends emails with confirmation instructions and verifies whether an account is already confirmed during sign in.
 * [Recoverable](http://rubydoc.info/github/plataformatec/devise/master/Devise/Models/Recoverable): resets the user password and sends reset instructions.
 * [Registerable](http://rubydoc.info/github/plataformatec/devise/master/Devise/Models/Registerable): handles signing up users through a registration process, also allowing them to edit and destroy their account.
@@ -27,7 +27,7 @@ It's composed of 10 modules:
 * [Validatable](http://rubydoc.info/github/plataformatec/devise/master/Devise/Models/Validatable): provides validations of email and password. It's optional and can be customized, so you're able to define your own validations.
 * [Lockable](http://rubydoc.info/github/plataformatec/devise/master/Devise/Models/Lockable): locks an account after a specified number of failed sign-in attempts. Can unlock via email or after a specified time period.
 
-Devise is guaranteed to be thread-safe on YARV. Thread-safety support on JRuby is on progress.
+Devise is guaranteed to be thread-safe on YARV. Thread-safety support on JRuby is in progress.
 
 ## Information
 
@@ -83,7 +83,7 @@ You will usually want to write tests for your changes.  To run the test suite, g
 
 If you are building your first Rails application, we recommend you to *not* use Devise. Devise requires a good understanding of the Rails Framework. In such cases, we advise you to start a simple authentication system from scratch, today we have two resources:
 
-* Michael Hartl's online book: http://railstutorial.org/chapters/modeling-and-viewing-users-two#top
+* Michael Hartl's online book: http://www.railstutorial.org/book/demo_app#sec-modeling_demo_users
 * Ryan Bates' Railscast: http://railscasts.com/episodes/250-authentication-from-scratch
 
 Once you have solidified your understanding of Rails and authentication mechanisms, we assure you Devise will be very pleasant to work with. :)
@@ -110,16 +110,22 @@ The generator will install an initializer which describes ALL Devise's configura
 rails generate devise MODEL
 ```
 
-Replace MODEL by the class name used for the applications users, it's frequently `User` but could also be `Admin`. This will create a model (if one does not exist) and configure it with default Devise modules. Next, you'll usually run `rake db:migrate` as the generator will have created a migration file (if your ORM supports them). This generator also configures your config/routes.rb file to point to the Devise controller.
+Replace MODEL by the class name used for the applications users, it's frequently `User` but could also be `Admin`. This will create a model (if one does not exist) and configure it with default Devise modules. Next, you'll usually run `rake db:migrate` as the generator will have created a migration file (if your ORM supports them). This generator also configures your `config/routes.rb` file to point to the Devise controller.
 
-Note that you should re-start your app here if you've already started it. Otherwise you'll run into strange errors like users being unable to login and the route helpers being undefined.
+Next, you need to set up the default url options for the Devise mailer in each environment. Here is a possible configuration for `config/environments/development.rb`:
+
+```ruby
+config.action_mailer.default_url_options = { host: 'localhost', port: 3000 }
+```
+
+You should restart your application after changing Devise's configuration options. Otherwise you'll run into strange errors like users being unable to login and route helpers being undefined.
 
 ### Controller filters and helpers
 
-Devise will create some helpers to use inside your controllers and views. To set up a controller with user authentication, just add this before_filter:
+Devise will create some helpers to use inside your controllers and views. To set up a controller with user authentication, just add this before_action:
 
 ```ruby
-before_filter :authenticate_user!
+before_action :authenticate_user!
 ```
 
 To verify if a user is signed in, use the following helper:
@@ -140,24 +146,18 @@ You can access the session for this scope:
 user_session
 ```
 
-After signing in a user, confirming the account or updating the password, Devise will look for a scoped root path to redirect. Example: For a :user resource, it will use `user_root_path` if it exists, otherwise default `root_path` will be used. This means that you need to set the root inside your routes:
+After signing in a user, confirming the account or updating the password, Devise will look for a scoped root path to redirect. For instance, for a `:user` resource, the `user_root_path` will be used if it exists, otherwise the default `root_path` will be used. This means that you need to set the root inside your routes:
 
 ```ruby
 root to: "home#index"
 ```
 
-You can also overwrite `after_sign_in_path_for` and `after_sign_out_path_for` to customize your redirect hooks.
+You can also override `after_sign_in_path_for` and `after_sign_out_path_for` to customize your redirect hooks.
 
-Finally, you need to set up default url options for the mailer in each environment. Here is the configuration for "config/environments/development.rb":
-
-```ruby
-config.action_mailer.default_url_options = { :host => 'localhost:3000' }
-```
-
-Notice that if your devise model is not called "user" but "member", then the helpers you should use are:
+Notice that if your Devise model is called `Member` instead of `User`, for example, then the helpers available are:
 
 ```ruby
-before_filter :authenticate_member!
+before_action :authenticate_member!
 
 member_signed_in?
 
@@ -168,13 +168,13 @@ member_session
 
 ### Configuring Models
 
-The devise method in your models also accepts some options to configure its modules. For example, you can choose the cost of the encryption algorithm with:
+The Devise method in your models also accepts some options to configure its modules. For example, you can choose the cost of the encryption algorithm with:
 
 ```ruby
-devise :database_authenticatable, :registerable, :confirmable, :recoverable, :stretches => 20
+devise :database_authenticatable, :registerable, :confirmable, :recoverable, stretches: 20
 ```
 
-Besides :stretches, you can define :pepper, :encryptor, :confirm_within, :remember_for, :timeout_in, :unlock_in and other values. For details, see the initializer file that was created when you invoked the "devise:install" generator described above.
+Besides `:stretches`, you can define `:pepper`, `:encryptor`, `:confirm_within`, `:remember_for`, `:timeout_in`, `:unlock_in` among other options. For more details, see the initializer file that was created when you invoked the "devise:install" generator described above.
 
 ### Strong Parameters
 
@@ -190,7 +190,7 @@ In case you want to permit additional parameters (the lazy way™) you can do wi
 
 ```ruby
 class ApplicationController < ActionController::Base
-  before_filter :configure_permitted_parameters, if: :devise_controller?
+  before_action :configure_permitted_parameters, if: :devise_controller?
 
   protected
 
@@ -200,13 +200,26 @@ class ApplicationController < ActionController::Base
 end
 ```
 
-To completely change Devise defaults or invoke custom behaviour, you can also pass a block:
+The above works for any additional fields where the parameters are simple scalar types. If you have nested attributes (say you're using `accepts_nested_parameters_for`), then you will need to tell devise about those nestings and types. Devise allows you to completely change Devise defaults or invoke custom behaviour by passing a block:
+
+To permit simple scalar values for username and email, use this
 
 ```ruby
 def configure_permitted_parameters
   devise_parameter_sanitizer.for(:sign_in) { |u| u.permit(:username, :email) }
 end
 ```
+
+If you have some checkboxes that express the roles a user may take on registration, the browser will send those selected checkboxes as an array. An array is not one of Strong Parameters permitted scalars, so we need to configure Devise thusly:
+
+```ruby
+def configure_permitted_parameters
+  devise_parameter_sanitizer.for(:sign_up) { |u| u.permit({ roles: [] }, :email, :password, :password_confirmation) }
+end
+```
+For the list of permitted scalars, and how to declare permitted keys in nested hashes and arrays, see
+
+https://github.com/rails/strong_parameters#nested-parameters
 
 If you have multiple Devise models, you may want to set up different parameter sanitizer per model. In this case, we recommend inheriting from `Devise::ParameterSanitizer` and add your own logic:
 
@@ -246,12 +259,19 @@ Since Devise is an engine, all its views are packaged inside the gem. These view
 rails generate devise:views
 ```
 
-If you have more than one Devise model in your application (such as "User" and "Admin"), you will notice that Devise uses the same views for all models. Fortunately, Devise offers an easy way to customize views. All you need to do is set "config.scoped_views = true" inside "config/initializers/devise.rb".
+If you have more than one Devise model in your application (such as `User` and `Admin`), you will notice that Devise uses the same views for all models. Fortunately, Devise offers an easy way to customize views. All you need to do is set `config.scoped_views = true` inside the `config/initializers/devise.rb` file.
 
-After doing so, you will be able to have views based on the role like "users/sessions/new" and "admins/sessions/new". If no view is found within the scope, Devise will use the default view at "devise/sessions/new". You can also use the generator to generate scoped views:
+After doing so, you will be able to have views based on the role like `users/sessions/new` and `admins/sessions/new`. If no view is found within the scope, Devise will use the default view at `devise/sessions/new`. You can also use the generator to generate scoped views:
 
 ```console
 rails generate devise:views users
+```
+
+If you want to generate only a few set of views, like the ones for the `registrable` and `confirmable` module,
+you can pass a list of modules to the generator with the `-v` flag.
+
+```console
+rails generate devise:views -v registrations confirmations
 ```
 
 ### Configuring controllers
@@ -265,24 +285,50 @@ If the customization at the views level is not enough, you can customize each co
     end
     ```
 
-    Note that in the above example, the controller needs to be created in the `app/controller/admins/` directory.
+    Note that in the above example, the controller needs to be created in the `app/controllers/admins/` directory.
 
 2. Tell the router to use this controller:
 
     ```ruby
-    devise_for :admins, :controllers => { :sessions => "admins/sessions" }
+    devise_for :admins, controllers: { sessions: "admins/sessions" }
     ```
 
-3. And since we changed the controller, it won't use the `"devise/sessions"` views, so remember to copy `"devise/sessions"` to `"admins/sessions"`.
+3. Copy the views from `devise/sessions` to `admins/sessions`. Since the controller was changed, it won't use the default views located in `devise/sessions`.
 
-    Remember that Devise uses flash messages to let users know if sign in was successful or failed. Devise expects your application to call `"flash[:notice]"` and `"flash[:alert]"` as appropriate. Do not print the entire flash hash, print specific keys or at least remove the `:timedout` key from the hash as Devise adds this key in some circumstances, this key is not meant for display.
+4. Finally, change or extend the desired controller actions.
+
+    You can completely override a controller action:
+
+    ```ruby
+    class Admins::SessionsController < Devise::SessionsController
+      def create
+        # custom sign-in code
+      end
+    end
+    ```
+
+    Or you can simply add new behaviour to it:
+
+    ```ruby
+    class Admins::SessionsController < Devise::SessionsController
+      def create
+        super do |resource|
+          BackgroundWorker.trigger(resource)
+        end
+      end
+    end
+    ```
+
+    This is useful for triggering background jobs or logging events during certain actions.
+
+Remember that Devise uses flash messages to let users know if sign in was successful or failed. Devise expects your application to call `flash[:notice]` and `flash[:alert]` as appropriate. Do not print the entire flash hash, print only specific keys. In some circumstances, Devise adds a `:timedout` key to the flash hash, which is not meant for display. Remove this key from the hash if you intend to print the entire hash.
 
 ### Configuring routes
 
 Devise also ships with default routes. If you need to customize them, you should probably be able to do it through the devise_for method. It accepts several options like :class_name, :path_prefix and so on, including the possibility to change path names for I18n:
 
 ```ruby
-devise_for :users, :path => "auth", :path_names => { :sign_in => 'login', :sign_out => 'logout', :password => 'secret', :confirmation => 'verification', :unlock => 'unblock', :registration => 'register', :sign_up => 'cmon_let_me_in' }
+devise_for :users, path: "auth", path_names: { sign_in: 'login', sign_out: 'logout', password: 'secret', confirmation: 'verification', unlock: 'unblock', registration: 'register', sign_up: 'cmon_let_me_in' }
 ```
 
 Be sure to check `devise_for` documentation for details.
@@ -291,11 +337,11 @@ If you have the need for more deep customization, for instance to also allow "/s
 
 ```ruby
 devise_scope :user do
-  get "sign_in", :to => "devise/sessions#new"
+  get "sign_in", to: "devise/sessions#new"
 end
 ```
 
-This way you tell devise to use the scope :user when "/sign_in" is accessed. Notice `devise_scope` is also aliased as `as` in your router.
+This way you tell Devise to use the scope `:user` when "/sign_in" is accessed. Notice `devise_scope` is also aliased as `as` in your router.
 
 ### I18n
 
@@ -339,7 +385,7 @@ https://github.com/plataformatec/devise/wiki/I18n
 
 ### Test helpers
 
-Devise includes some tests helpers for functional specs. In order to use them, you need to include Devise in your functional tests by adding the following to the bottom of your `test/test_helper.rb` file:
+Devise includes some test helpers for functional specs. In order to use them, you need to include Devise in your functional tests by adding the following to the bottom of your `test/test_helper.rb` file:
 
 ```ruby
 class ActionController::TestCase
@@ -351,7 +397,7 @@ If you're using RSpec, you can put the following inside a file named `spec/suppo
 
 ```ruby
 RSpec.configure do |config|
-  config.include Devise::TestHelpers, :type => :controller
+  config.include Devise::TestHelpers, type: :controller
 end
 ```
 
@@ -381,7 +427,7 @@ There are two things that is important to keep in mind:
 Devise comes with Omniauth support out of the box to authenticate with other providers. To use it, just specify your omniauth configuration in `config/initializers/devise.rb`:
 
 ```ruby
-config.omniauth :github, 'APP_ID', 'APP_SECRET', :scope => 'user,public_repo'
+config.omniauth :github, 'APP_ID', 'APP_SECRET', scope: 'user,public_repo'
 ```
 
 You can read more about Omniauth support in the wiki:
@@ -427,7 +473,7 @@ Devise supports ActiveRecord (default) and Mongoid. To choose other ORM, you jus
 
 ### Heroku
 
-Using devise on Heroku with Ruby on Rails 3.1 requires setting:
+Using Devise on Heroku with Ruby on Rails 3.1 requires setting:
 
 ```ruby
 config.assets.initialize_on_precompile = false

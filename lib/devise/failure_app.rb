@@ -15,7 +15,7 @@ module Devise
 
     include Devise::Controllers::StoreLocation
 
-    delegate :flash, :to => :request
+    delegate :flash, to: :request
 
     def self.call(env)
       @respond ||= action(:respond)
@@ -96,15 +96,15 @@ module Devise
           request.referrer
         end
 
-        path || scope_path
+        path || scope_url
       else
-        scope_path
+        scope_url
       end
     end
 
-    def scope_path
+    def scope_url
       opts  = {}
-      route = :"new_#{scope}_session_path"
+      route = :"new_#{scope}_session_url"
       opts[:format] = request_format unless skip_format?
 
       config = Rails.application.config
@@ -114,8 +114,8 @@ module Devise
 
       if context.respond_to?(route)
         context.send(route, opts)
-      elsif respond_to?(:root_path)
-        root_path(opts)
+      elsif respond_to?(:root_url)
+        root_url(opts)
       else
         "/"
       end
@@ -151,9 +151,9 @@ module Devise
       return i18n_message unless request_format
       method = "to_#{request_format}"
       if method == "to_xml"
-        { :error => i18n_message }.to_xml(:root => "errors")
+        { error: i18n_message }.to_xml(root: "errors")
       elsif {}.respond_to?(method)
-        { :error => i18n_message }.send(method)
+        { error: i18n_message }.send(method)
       else
         i18n_message
       end
