@@ -6,8 +6,8 @@ class DeviseController < Devise.parent_controller.constantize
 
   helpers = %w(resource scope_name resource_name signed_in_resource
                resource_class resource_params devise_mapping)
-  hide_action *helpers
-  helper_method *helpers
+  hide_action(*helpers)
+  helper_method(*helpers)
 
   prepend_before_filter :assert_is_devise_resource!
   respond_to :html if mimes_for_respond_to.empty?
@@ -44,7 +44,7 @@ class DeviseController < Devise.parent_controller.constantize
   # loaded before even having a request object.
   def _prefixes #:nodoc:
     @_prefixes ||= if self.class.scoped_views? && request && devise_mapping
-      super.unshift("#{devise_mapping.scoped_path}/#{controller_name}")
+      ["#{devise_mapping.scoped_path}/#{controller_name}"] + super
     else
       super
     end

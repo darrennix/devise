@@ -299,18 +299,30 @@ class LockableTest < ActiveSupport::TestCase
   end
 
   test 'should return last attempt message if user made next-to-last attempt of password entering' do
-    swap Devise, last_attempt_warning: :true do
-      swap Devise, lock_strategy: :failed_attempts do
-        user = create_user
-        user.failed_attempts = Devise.maximum_attempts - 2
-        assert_equal :invalid, user.unauthenticated_message
+    swap Devise, last_attempt_warning: true, lock_strategy: :failed_attempts do
+      user = create_user
+      user.failed_attempts = Devise.maximum_attempts - 2
+      assert_equal :invalid, user.unauthenticated_message
 
-        user.failed_attempts = Devise.maximum_attempts - 1
-        assert_equal :last_attempt, user.unauthenticated_message
+      user.failed_attempts = Devise.maximum_attempts - 1
+      assert_equal :last_attempt, user.unauthenticated_message
 
-        user.failed_attempts = Devise.maximum_attempts
-        assert_equal :locked, user.unauthenticated_message
-      end
+      user.failed_attempts = Devise.maximum_attempts
+      assert_equal :locked, user.unauthenticated_message
     end
+  end
+
+  test 'should not return last attempt message if last_attempt_warning is disabled' do
+    swap Devise, last_attempt_warning: false, lock_strategy: :failed_attempts do
+      user = create_user
+      user.failed_attempts = Devise.maximum_attempts - 1
+      assert_equal :invalid, user.unauthenticated_message
+    end
+  end
+
+  test 'should return locked message if user was programatically locked' do
+    user = create_user
+    user.lock_access!
+    assert_equal :locked, user.unauthenticated_message
   end
 end

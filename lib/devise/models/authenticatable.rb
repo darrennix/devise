@@ -170,7 +170,13 @@ module Devise
       #     end
       #
       def send_devise_notification(notification, *args)
-        devise_mailer.send(notification, self, *args).deliver
+        message = devise_mailer.send(notification, self, *args)
+        # Remove once we move to Rails 4.2+ only.
+        if message.respond_to?(:deliver_now)
+          message.deliver_now
+        else
+          message.deliver
+        end
       end
 
       def downcase_keys
@@ -253,7 +259,7 @@ module Devise
 
         # Find an initialize a group of attributes based on a list of required attributes.
         def find_or_initialize_with_errors(required_attributes, attributes, error=:invalid) #:nodoc:
-          attributes = attributes.slice(*required_attributes)
+          attributes = attributes.slice(*required_attributes).with_indifferent_access
           attributes.delete_if { |key, value| value.blank? }
 
           if attributes.size == required_attributes.size

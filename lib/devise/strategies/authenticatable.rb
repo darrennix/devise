@@ -16,6 +16,13 @@ module Devise
         valid_for_params_auth? || valid_for_http_auth?
       end
 
+      # Override and set to false for things like OmniAuth that technically
+      # run through Authentication (user_set) very often, which would normally
+      # reset CSRF data in the session
+      def clean_up_csrf?
+        true
+      end
+
     private
 
       # Receives a resource and check if it is valid by calling valid_for_authentication?
@@ -29,7 +36,6 @@ module Devise
         result = resource && resource.valid_for_authentication?(&block)
 
         if result
-          decorate(resource)
           true
         else
           if resource
@@ -40,7 +46,7 @@ module Devise
       end
 
       # Get values from params and set in the resource.
-      def decorate(resource)
+      def remember_me(resource)
         resource.remember_me = remember_me? if resource.respond_to?(:remember_me=)
       end
 
